@@ -77,12 +77,12 @@ class Analyser():
     a) pre-processing of the collected data by the fetcher
     b) semantic analysis of the text-date within the messages
     """
-    def __init__(self): # the attributes of this class are the model used during the analysis
+    def __init__(self):
         #Initializing model for sentiment analysis
         self.sentiment_tokenizer = AutoTokenizer.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
         self.sentiment_analysis_model = AutoModelForSequenceClassification.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
 
-
+        #Initialiaze model for zero-shot classification
         self.topic_classifier_model = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
         # self.sensitive_topic
         # self.inappropirate_messages
@@ -98,7 +98,6 @@ class Analyser():
         predicted_class = torch.argmax(outputs.logits).item()
         sentiment = labels[predicted_class]
         return sentiment
-
     def classify_topic(self,analysed_data:str):
         possible_labels = ['Politics', 'Economy', 'Technology', 'Sports', 'Health', 'Entertainment', 'Science',
                         'Environment', 'World News', 'Local News']
