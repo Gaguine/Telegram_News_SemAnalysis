@@ -1,8 +1,9 @@
 import os
-from datetime import date
-
-from Tools.demo.eiffel import Tests
 from bs4 import BeautifulSoup
+import transformers
+from sympy import textplot
+from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassification
+import torch
 
 
 class Tg_Message:
@@ -70,12 +71,38 @@ class Fetcher:
                 message_list.append(message)
 
         return message_list
-class Analyser:
+class Analyser():
     """
     This class will:
     a) pre-processing of the collected data by the fetcher
     b) semantic analysis of the text-date within the messages
     """
+    def __init__(self): # the attributes of this class are the model used during the analysis
+        self.sentiment_analysis = AutoModelForSequenceClassification.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+        self.sentiment_analysis.tokenizer = AutoTokenizer.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+
+        self.topic_classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+        # self.sensitive_topic
+        # self.inappropirate_messages
+
+    def sentiment_analysis(self,analysed_data:str) -> str:
+        labels = ["Neutral", "Positive", "Negative"]
+        inputs = self.sentiment_analysis.tokenizer(analysed_data, return_tensors="pt", truncation=True, padding=True)
+
+        with torch.no_grad():
+            outputs = self.sentiment_analysis(**inputs)
+
+        # Extract predicted sentiment
+        predicted_class = torch.argmax(outputs.logits).item()
+        sentiment = labels[predicted_class]
+        return sentiment
+
+    def topic_classification(self,analysed_data:str):
+        possible_labels = ['Politics', 'Economy', 'Technology', 'Sports', 'Health', 'Entertainment', 'Science',
+                        'Environment', 'World News', 'Local News']
+        output = self.topic_classifier(analysed_data, possible_labels, multi_label=False)
+        return output['labels'][0]
+
 class Displayer:
     """
     The Displayer will create the csv file.
@@ -83,7 +110,15 @@ class Displayer:
 
 
 """"Testing the classes"""
+
+"""Testing the Fetcher"""
 fetcher = Fetcher()
 bs_messages = fetcher.read_html()
 message_list = fetcher.create_messages(bs_messages)
-print(message_list[0].text)
+text = message_list[1].text
+print(text)
+
+"""Testing the Analyser"""
+analyser = Analyser()
+# print(analyser.topic_classification(text))
+print(analyser.sentiment_analysis(text))
