@@ -78,29 +78,31 @@ class Analyser():
     b) semantic analysis of the text-date within the messages
     """
     def __init__(self): # the attributes of this class are the model used during the analysis
-        self.sentiment_analysis = AutoModelForSequenceClassification.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
-        self.sentiment_analysis.tokenizer = AutoTokenizer.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+        #Initializing model for sentiment analysis
+        self.sentiment_tokenizer = AutoTokenizer.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+        self.sentiment_analysis_model = AutoModelForSequenceClassification.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
 
-        self.topic_classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+
+        self.topic_classifier_model = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
         # self.sensitive_topic
         # self.inappropirate_messages
 
     def sentiment_analysis(self,analysed_data:str) -> str:
         labels = ["Neutral", "Positive", "Negative"]
-        inputs = self.sentiment_analysis.tokenizer(analysed_data, return_tensors="pt", truncation=True, padding=True)
+        inputs = self.sentiment_tokenizer(analysed_data, padding=True, return_tensors="pt")
 
         with torch.no_grad():
-            outputs = self.sentiment_analysis(**inputs)
+            outputs = self.sentiment_analysis_model(**inputs)
 
         # Extract predicted sentiment
         predicted_class = torch.argmax(outputs.logits).item()
         sentiment = labels[predicted_class]
         return sentiment
 
-    def topic_classification(self,analysed_data:str):
+    def classify_topic(self,analysed_data:str):
         possible_labels = ['Politics', 'Economy', 'Technology', 'Sports', 'Health', 'Entertainment', 'Science',
                         'Environment', 'World News', 'Local News']
-        output = self.topic_classifier(analysed_data, possible_labels, multi_label=False)
+        output = self.topic_classifier_model(analysed_data, possible_labels, multi_label=False)
         return output['labels'][0]
 
 class Displayer:
@@ -115,10 +117,10 @@ class Displayer:
 fetcher = Fetcher()
 bs_messages = fetcher.read_html()
 message_list = fetcher.create_messages(bs_messages)
-text = message_list[1].text
+text = message_list[15].text
 print(text)
 
 """Testing the Analyser"""
 analyser = Analyser()
-# print(analyser.topic_classification(text))
+print(analyser.classify_topic(text))
 print(analyser.sentiment_analysis(text))
