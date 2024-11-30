@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import transformers
 from sympy import textplot
 from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassification
-import torch
+import torch, json
 
 
 class Tg_Message:
@@ -84,7 +84,13 @@ class Analyser():
 
         #Initialiaze model for zero-shot classification
         self.topic_classifier_model = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
-        # self.sensitive_topic
+
+        # Initialize model for sensitive topic classification
+        self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
+        self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
+        with open("id2topic.json") as f:
+            self.target_variables = json.load(f)
+
         # self.inappropirate_messages
 
     def sentiment_analysis(self,analysed_data:str) -> str:
@@ -103,7 +109,13 @@ class Analyser():
                         'Environment', 'World News', 'Local News']
         output = self.topic_classifier_model(analysed_data, possible_labels, multi_label=False)
         return output['labels'][0]
-
+    def classify_sensitive_topic(self,analysed_data:str):
+        inputs = self.sensitive_topic_tokenizer(analysed_data, return_tensors="pt", truncation=True, padding=True)
+        with torch.no_grad():
+            outputs = self.sensitive_topic_model(**inputs)
+        predicted_class = torch.argmax(outputs.logits).item()
+        predicted_sensitive_topic = self.target_variables[str(predicted_class)]
+        return predicted_sensitive_topic
 class Displayer:
     """
     The Displayer will create the csv file.
@@ -123,3 +135,4 @@ print(text)
 analyser = Analyser()
 print(analyser.classify_topic(text))
 print(analyser.sentiment_analysis(text))
+print(analyser.classify_sensitive_topic(text))
