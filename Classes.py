@@ -1,13 +1,11 @@
 import os
 from bs4 import BeautifulSoup
-import transformers
-from sympy import textplot
 from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassification
 import torch, json
 
 
 class Tg_Message:
-    """this class will create objects that reseamble telegram messages, but with a dictionary like structure.
+    """this class will create objects resembling telegram messages, but with a dictionary-like structure.
     A sort of container.
     It will have the following attributes:
     self.text = text
@@ -15,17 +13,36 @@ class Tg_Message:
     self.contents = {
                     "text":self.text,
                     "date":self.date
-    }"""
+    }
+    @to-do
+    It will be a good idea to create a method, which will assign these new attributes to the Tg_Message object.
+    add:
+    self.topic = topic
+    self.sentiment = sentiment
+    self.sensitive_topic = sensitive_topic
+    """
 
     def __init__(self,text:str,date):
         self.text = text
         self.date = date
         self.contents={}
+
+    def assign_topic(self,topic:str): # wil it be a good idea to create just one method for them all?
+        self.topic = topic
+    def assign_sentiment(self,sentiment:str):
+        self.sentiment = sentiment
+    def assign_sensitive_topic(self,sensitive_topic:str):
+        self.sensitive_topic = sensitive_topic
+
+    def assign_new_label(self,topic:str,sentiment:str,sensitive_topic:str):
+        self.assign_topic(topic)
+        self.assign_sentiment(sentiment)
+        self.assign_sensitive_topic(sensitive_topic)
 class Fetcher:
     """
     The Fetcher wil be responsible for the following tasks:
     - collect the data found in the html files
-    - sort through the all the files and collect only the needed data
+    - sort through the all the files and collect only the needed data(date, and text data)
     - create Tg_message objects and assign them the attributes: text and date
     @to-do
     - output a dictionary with the following structure:
@@ -71,11 +88,10 @@ class Fetcher:
                 message_list.append(message)
 
         return message_list
-class Analyser():
+class Analyser:
     """
-    This class will:
-    a) pre-processing of the collected data by the fetcher
-    b) semantic analysis of the text-date within the messages
+    The Analyser class boots up the LLMs, and provides the prediction for topic, sentiment, and sensitive topic for the
+    text provided.
     """
     def __init__(self):
         #Initializing model for sentiment analysis
@@ -92,7 +108,6 @@ class Analyser():
             self.target_variables = json.load(f)
 
         # self.inappropirate_messages
-
     def sentiment_analysis(self,analysed_data:str) -> str:
         labels = ["Neutral", "Positive", "Negative"]
         inputs = self.sentiment_tokenizer(analysed_data, padding=True, return_tensors="pt")
