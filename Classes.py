@@ -1,8 +1,9 @@
 import os
-from datetime import date
-
-from Tools.demo.eiffel import Tests
 from bs4 import BeautifulSoup
+import transformers
+from sympy import textplot
+from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassification
+import torch, json
 
 
 class Tg_Message:
@@ -70,12 +71,51 @@ class Fetcher:
                 message_list.append(message)
 
         return message_list
-class Analyser:
+class Analyser():
     """
     This class will:
     a) pre-processing of the collected data by the fetcher
     b) semantic analysis of the text-date within the messages
     """
+    def __init__(self):
+        #Initializing model for sentiment analysis
+        self.sentiment_tokenizer = AutoTokenizer.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+        self.sentiment_analysis_model = AutoModelForSequenceClassification.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+
+        #Initialiaze model for zero-shot classification
+        self.topic_classifier_model = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+
+        # Initialize model for sensitive topic classification
+        self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
+        self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
+        with open("id2topic.json") as f:
+            self.target_variables = json.load(f)
+
+        # self.inappropirate_messages
+
+    def sentiment_analysis(self,analysed_data:str) -> str:
+        labels = ["Neutral", "Positive", "Negative"]
+        inputs = self.sentiment_tokenizer(analysed_data, padding=True, return_tensors="pt")
+
+        with torch.no_grad():
+            outputs = self.sentiment_analysis_model(**inputs)
+
+        # Extract predicted sentiment
+        predicted_class = torch.argmax(outputs.logits).item()
+        sentiment = labels[predicted_class]
+        return sentiment
+    def classify_topic(self,analysed_data:str):
+        possible_labels = ['Politics', 'Economy', 'Technology', 'Sports', 'Health', 'Entertainment', 'Science',
+                        'Environment', 'World News', 'Local News']
+        output = self.topic_classifier_model(analysed_data, possible_labels, multi_label=False)
+        return output['labels'][0]
+    def classify_sensitive_topic(self,analysed_data:str):
+        inputs = self.sensitive_topic_tokenizer(analysed_data, return_tensors="pt", truncation=True, padding=True)
+        with torch.no_grad():
+            outputs = self.sensitive_topic_model(**inputs)
+        predicted_class = torch.argmax(outputs.logits).item()
+        predicted_sensitive_topic = self.target_variables[str(predicted_class)]
+        return predicted_sensitive_topic
 class Displayer:
     """
     The Displayer will create the csv file.
@@ -83,7 +123,16 @@ class Displayer:
 
 
 """"Testing the classes"""
+
+"""Testing the Fetcher"""
 fetcher = Fetcher()
 bs_messages = fetcher.read_html()
 message_list = fetcher.create_messages(bs_messages)
-print(message_list[0].text)
+text = message_list[15].text
+print(text)
+
+"""Testing the Analyser"""
+analyser = Analyser()
+print(analyser.classify_topic(text))
+print(analyser.sentiment_analysis(text))
+print(analyser.classify_sensitive_topic(text))
