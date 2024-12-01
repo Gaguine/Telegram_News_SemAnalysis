@@ -45,7 +45,6 @@ class Tg_Message():
         self.contents['label'] = self.topic
         self.contents['sensitive topic'] = self.sensitive_topic
         self.contents['text']=self.text
-
 class Fetcher:
     """
     The Fetcher wil be responsible for the following tasks:
@@ -82,7 +81,7 @@ class Fetcher:
                 body_divs = soup.find_all('div', class_='body')
                 bs_messages = [div for div in body_divs if div['class'] == ['body']]  # filter body divs, the to-be messages
 
-                return bs_messages[:50] # this will be a slice
+                return bs_messages
     def create_messages(self,bs_messages: list):
         """
         The following method transforms bs4 tag objects Tg_message objects.
@@ -92,10 +91,12 @@ class Fetcher:
             if message.find('div', class_='text') != None:  # if it does not find any texts, then we skip it
                 text = message.find('div', class_='text').get_text().strip()
                 date = message.find('div', class_='pull_right date details').get('title')
+
+                date = date[:10].replace(".","/")
                 message = Tg_Message(text, date)
                 message_list.append(message)
 
-        return message_list
+        return message_list[:50] # add message restriction for better performance
 class Analyser:
     """
     The Analyser class boots up the LLMs, and provides the prediction for topic, sentiment, and sensitive topic for the
@@ -145,27 +146,30 @@ class Displayer:
     """
 
 
-""""Testing the classes"""
-
-"""Testing the Fetcher"""
-fetcher = Fetcher()
-bs_messages = fetcher.read_html()
-message_list = fetcher.create_messages(bs_messages)
+# """"Testing the classes"""
+#
+# """Testing the Fetcher"""
+# fetcher = Fetcher()
+# bs_messages = fetcher.read_html()
+# message_list = fetcher.create_messages(bs_messages)
+# # print(text)
+#
+# """Testing the Analyser"""
+# analyser = Analyser()
+# # print(analyser.classify_topic(text))
+# # print(analyser.sentiment_analysis(text))
+# # print(analyser.classify_sensitive_topic(text))
+#
+# """Add new information to the Tg_Message object"""
+# for message in message_list:
+#     topic = analyser.classify_topic(message.text)
+#     sentiment = analyser.sentiment_analysis(message.text)
+#     sensitive_topic = analyser.classify_sensitive_topic(message.text)
+#
+#     message.assign_new_labels(topic,sentiment,sensitive_topic)
+# num = 2
+# text = f"{message_list[num].date},{message_list[num].topic},{message_list[num].sensitive_topic}"
 # print(text)
-
-"""Testing the Analyser"""
-analyser = Analyser()
-# print(analyser.classify_topic(text))
-# print(analyser.sentiment_analysis(text))
-# print(analyser.classify_sensitive_topic(text))
-
-"""Add new information to the Tg_Message object"""
-for message in message_list:
-    topic = analyser.classify_topic(message.text)
-    sentiment = analyser.sentiment_analysis(message.text)
-    sensitive_topic = analyser.classify_sensitive_topic(message.text)
-
-    message.assign_new_labels(topic,sentiment,sensitive_topic)
-num = 2
-text = f"{message_list[num].date},{message_list[num].topic},{message_list[num].sensitive_topic}"
-print(text)
+# message_list[num].create_contents()
+# message_dict = message_list[num].contents
+# print(message_dict)
