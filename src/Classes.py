@@ -1,13 +1,11 @@
 import os
 from bs4 import BeautifulSoup
-import transformers
-from sympy import textplot
 from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassification
 import torch, json
 
 
-class Tg_Message:
-    """this class will create objects that reseamble telegram messages, but with a dictionary like structure.
+class Tg_Message():
+    """this class will create objects resembling telegram messages, but with a dictionary-like structure.
     A sort of container.
     It will have the following attributes:
     self.text = text
@@ -15,26 +13,52 @@ class Tg_Message:
     self.contents = {
                     "text":self.text,
                     "date":self.date
-    }"""
+    }
+    @to-do
+    It will be a good idea to create a method, which will assign these new attributes to the Tg_Message object.
+    add:
+    self.topic = topic
+    self.sentiment = sentiment
+    self.sensitive_topic = sensitive_topic
+    """
 
     def __init__(self,text:str,date):
         self.text = text
         self.date = date
         self.contents={}
+
+    def assign_topic(self,topic:str): # wil it be a good idea to create just one method for them all?
+        self.topic = topic
+    def assign_sentiment(self,sentiment:str):
+        self.sentiment = sentiment
+    def assign_sensitive_topic(self,sensitive_topic:str):
+        self.sensitive_topic = sensitive_topic
+
+    def assign_new_labels(self,topic:str,sentiment:str,sensitive_topic:str):
+        self.assign_topic(topic)
+        self.assign_sentiment(sentiment)
+        self.assign_sensitive_topic(sensitive_topic)
+
+    def create_contents(self):
+        self.contents['date']= self.date
+        self.contents['semantic tag'] = self.sentiment
+        self.contents['label'] = self.topic
+        self.contents['sensitive topic'] = self.sensitive_topic
+        self.contents['text']=self.text
 class Fetcher:
     """
     The Fetcher wil be responsible for the following tasks:
     - collect the data found in the html files
-    - sort through the all the files and collect only the needed data
+    - sort through the all the files and collect only the needed data(date, and text data)
     - create Tg_message objects and assign them the attributes: text and date
     @to-do
     - output a dictionary with the following structure:
         {int: { "date"           :date.object,
                 "text_contents" :str }}
     """
-    def __init__(self):
+    def __init__(self,base_path):
         self.path = os.path.dirname(__file__)#Where is the Fetcher object called from
-        self.data_path = os.path.join(self.path, "Data/") #searches where the Data is located
+        self.data_path = os.path.join(base_path, "Data/") #searches where the Data is located
         self.texts = []
         self.dates = []
     def read_html(self)->list:
@@ -57,8 +81,8 @@ class Fetcher:
                 body_divs = soup.find_all('div', class_='body')
                 bs_messages = [div for div in body_divs if div['class'] == ['body']]  # filter body divs, the to-be messages
 
-                return bs_messages # messages is a list of bs4 tag objects
-    def create_messages(self,bs_messages: list):
+                return bs_messages
+    def create_messages(self,bs_messages: list,restriction:int):
         """
         The following method transforms bs4 tag objects Tg_message objects.
         """
@@ -67,15 +91,16 @@ class Fetcher:
             if message.find('div', class_='text') != None:  # if it does not find any texts, then we skip it
                 text = message.find('div', class_='text').get_text().strip()
                 date = message.find('div', class_='pull_right date details').get('title')
+
+                date = date[:10].replace(".","/")
                 message = Tg_Message(text, date)
                 message_list.append(message)
 
-        return message_list
-class Analyser():
+        return message_list[:restriction] # add message restriction for better performance
+class Analyser:
     """
-    This class will:
-    a) pre-processing of the collected data by the fetcher
-    b) semantic analysis of the text-date within the messages
+    The Analyser class boots up the LLMs, and provides the prediction for topic, sentiment, and sensitive topic for the
+    text provided.
     """
     def __init__(self):
         #Initializing model for sentiment analysis
@@ -88,11 +113,10 @@ class Analyser():
         # Initialize model for sensitive topic classification
         self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
         self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
-        with open("id2topic.json") as f:
+        with open("src/id2topic.json") as f:
             self.target_variables = json.load(f)
 
         # self.inappropirate_messages
-
     def sentiment_analysis(self,analysed_data:str) -> str:
         labels = ["Neutral", "Positive", "Negative"]
         inputs = self.sentiment_tokenizer(analysed_data, padding=True, return_tensors="pt")
@@ -122,17 +146,30 @@ class Displayer:
     """
 
 
-""""Testing the classes"""
-
-"""Testing the Fetcher"""
-fetcher = Fetcher()
-bs_messages = fetcher.read_html()
-message_list = fetcher.create_messages(bs_messages)
-text = message_list[15].text
-print(text)
-
-"""Testing the Analyser"""
-analyser = Analyser()
-print(analyser.classify_topic(text))
-print(analyser.sentiment_analysis(text))
-print(analyser.classify_sensitive_topic(text))
+# """"Testing the classes"""
+#
+# """Testing the Fetcher"""
+# fetcher = Fetcher()
+# bs_messages = fetcher.read_html()
+# message_list = fetcher.create_messages(bs_messages)
+# # print(text)
+#
+# """Testing the Analyser"""
+# analyser = Analyser()
+# # print(analyser.classify_topic(text))
+# # print(analyser.sentiment_analysis(text))
+# # print(analyser.classify_sensitive_topic(text))
+#
+# """Add new information to the Tg_Message object"""
+# for message in message_list:
+#     topic = analyser.classify_topic(message.text)
+#     sentiment = analyser.sentiment_analysis(message.text)
+#     sensitive_topic = analyser.classify_sensitive_topic(message.text)
+#
+#     message.assign_new_labels(topic,sentiment,sensitive_topic)
+# num = 2
+# text = f"{message_list[num].date},{message_list[num].topic},{message_list[num].sensitive_topic}"
+# print(text)
+# message_list[num].create_contents()
+# message_dict = message_list[num].contents
+# print(message_dict)
