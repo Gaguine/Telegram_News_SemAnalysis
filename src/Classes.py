@@ -82,7 +82,7 @@ class Fetcher:
                 bs_messages = [div for div in body_divs if div['class'] == ['body']]  # filter body divs, the to-be messages
 
                 return bs_messages
-    def create_messages(self,bs_messages: list):
+    def create_messages(self,bs_messages: list,restriction:int):
         """
         The following method transforms bs4 tag objects Tg_message objects.
         """
@@ -96,7 +96,7 @@ class Fetcher:
                 message = Tg_Message(text, date)
                 message_list.append(message)
 
-        return message_list[:25] # add message restriction for better performance
+        return message_list[:restriction] # add message restriction for better performance
 class Analyser:
     """
     The Analyser class boots up the LLMs, and provides the prediction for topic, sentiment, and sensitive topic for the
