@@ -96,7 +96,7 @@ class Fetcher:
                 message = Tg_Message(text, date)
                 message_list.append(message)
 
-        return message_list[:50] # add message restriction for better performance
+        return message_list[:25] # add message restriction for better performance
 class Analyser:
     """
     The Analyser class boots up the LLMs, and provides the prediction for topic, sentiment, and sensitive topic for the
@@ -113,7 +113,7 @@ class Analyser:
         # Initialize model for sensitive topic classification
         self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
         self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
-        with open("id2topic.json") as f:
+        with open("src/id2topic.json") as f:
             self.target_variables = json.load(f)
 
         # self.inappropirate_messages
