@@ -1,5 +1,5 @@
 import argparse
-import os
+import os, getpass
 import pandas as pd
 from src.Classes import Fetcher, Analyser  # Import your custom logic
 
@@ -31,8 +31,8 @@ def parse_args():
     )
     parser.add_argument(
         '--output',
-        default=os.path.join(os.path.dirname(__file__), "results", "output.csv"),
-        help='Path to the output CSV file. Defaults to "results/output.csv".'
+        default=os.path.join(os.path.dirname(__file__), "Output", "output.csv"),
+        help='Path to the output CSV file. Defaults to "Output/output.csv".'
     )
     parser.add_argument(
         '--sep',
@@ -44,7 +44,8 @@ def parse_args():
 
 def run_analysis(html_files, output_file, sep):
     """Run the main analysis logic."""
-    fetcher = Fetcher()
+    script_path = os.path.dirname(__file__)
+    fetcher = Fetcher(script_path)
     analyser = Analyser()
 
     data = {
@@ -74,9 +75,12 @@ def run_analysis(html_files, output_file, sep):
 
     # Create a DataFrame and save it to a CSV file
     df = pd.DataFrame(data)
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)  # Ensure the output directory exists
-    df.to_csv(output_file, sep=sep, index=False)
-    print(f"Analysis completed. Results saved to {output_file}")
+    output_dir = os.path.join(script_path, "Output")
+    os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
+
+    output_file_path = os.path.join(output_dir, "output.csv")  # Specify the file name
+    df.to_csv(output_file_path, sep=sep, index=False)
+    print(f"Analysis completed. Results saved to {output_file_path}")
 
 
 def main():

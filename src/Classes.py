@@ -56,9 +56,9 @@ class Fetcher:
         {int: { "date"           :date.object,
                 "text_contents" :str }}
     """
-    def __init__(self):
+    def __init__(self,base_path):
         self.path = os.path.dirname(__file__)#Where is the Fetcher object called from
-        self.data_path = os.path.join(self.path, "Data/") #searches where the Data is located
+        self.data_path = os.path.join(base_path, "Data/") #searches where the Data is located
         self.texts = []
         self.dates = []
     def read_html(self)->list:

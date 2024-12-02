@@ -1,0 +1,26 @@
+Date|Semantic Tag|Label|Sensitive Topic
+01/12/2021|Negative|Entertainment|none
+01/12/2021|Negative|Politics|offline_crime
+01/12/2021|Neutral|Politics|gambling
+01/12/2021|Negative|Economy|health_shaming
+01/12/2021|Neutral|Politics|none
+01/12/2021|Negative|Entertainment|politics
+01/12/2021|Positive|Entertainment|none
+01/12/2021|Negative|Economy|none
+01/12/2021|Neutral|Economy|none
+01/12/2021|Negative|Technology|none
+01/12/2021|Positive|Economy|social_injustice
+01/12/2021|Negative|Health|offline_crime,drugs
+02/12/2021|Neutral|Entertainment|religion
+02/12/2021|Neutral|Technology|offline_crime
+02/12/2021|Neutral|Health|offline_crime,politics
+02/12/2021|Negative|Entertainment|social_injustice
+02/12/2021|Neutral|Environment|politics
+02/12/2021|Negative|Politics|none
+02/12/2021|Negative|Economy|social_injustice
+02/12/2021|Negative|Health|none
+02/12/2021|Negative|Technology|online_crime
+02/12/2021|Neutral|Environment|none
+03/12/2021|Neutral|Technology|pornography
+03/12/2021|Neutral|Politics|none
+03/12/2021|Positive|Entertainment|none
