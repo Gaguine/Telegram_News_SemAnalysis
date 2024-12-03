@@ -1,7 +1,7 @@
 import argparse
-import os, getpass
+import os
 import pandas as pd
-from Classes import Fetcher, Analyser  # Import your custom logic
+from Classes import Fetcher, Analyser  # Import your custom classes
 
 
 def parse_args():
@@ -13,9 +13,12 @@ def parse_args():
         'run',
         help='Starts the analysis')
 
-    # Get the absolute path to the `Data` folder
-    project_root = os.path.dirname(os.path.dirname(__file__))
+    # Use the project root directory as the base
+    project_root = os.getcwd()
+
+    # Paths for Data and Output folders
     default_data_dir = os.path.join(project_root, "Data")
+    default_output_dir = os.path.join(project_root, "Output")
 
     # Check if the `Data` directory exists
     if not os.path.exists(default_data_dir):
@@ -33,26 +36,8 @@ def parse_args():
         help='Path(s) to input HTML file(s). Defaults to files in the "Data" folder.'
     )
     parser.add_argument(
-        '-re',
-        '--restriction',
-        type=int,
-        nargs='?',
-        default=5,
-        help="'Maximum number of messages to process. Default is -1 (process all)."
-    )
-
-    """For Future Implementation"""
-    # default_analysis_methods = ['classify_topic', 'sentiment_analysis']
-    # parser.add_argument(
-    #     '--analysis',
-    #     nargs='+',
-    #     choices=['classify_topic', 'sentiment_analysis', 'classify_sensitive_topic'],
-    #     default=default_analysis_methods,
-    #     help='Specify the analysis methods to use. Default: classify_topic and sentiment_analysis.')
-    #
-    parser.add_argument(
         '--output',
-        default=os.path.join(os.path.dirname(__file__), "Output", "output.csv"),
+        default=os.path.join(default_output_dir, "output.csv"),
         help='Path to the output CSV file. Defaults to "Output/output.csv".'
     )
     parser.add_argument(
@@ -60,12 +45,19 @@ def parse_args():
         default='|',
         help='CSV delimiter (default: "|").'
     )
+    parser.add_argument(
+        '-re',
+        '--restriction',
+        type=int,
+        default=5,
+        help="Maximum number of messages to process. Default is 5."
+    )
     return parser.parse_args()
 
 
 def run_analysis(html_files, output_file, sep, restriction):
     """Run the main analysis logic."""
-    project_root = os.path.dirname(os.path.dirname(__file__))  # Get the root directory
+    project_root = os.getcwd()  # Use the current working directory as the root
     fetcher = Fetcher(project_root)
     analyser = Analyser()
 
@@ -80,7 +72,7 @@ def run_analysis(html_files, output_file, sep, restriction):
         print(f"Processing file: {html_file}")
         fetcher.html_path = html_file  # Set the HTML path in Fetcher
         bs_messages = fetcher.read_html()
-        message_list = fetcher.create_messages(bs_messages,restriction)
+        message_list = fetcher.create_messages(bs_messages, restriction)
 
         for message in message_list:
             topic = analyser.classify_topic(message.text)
@@ -95,13 +87,12 @@ def run_analysis(html_files, output_file, sep, restriction):
             data["Sensitive Topic"].append(message.sensitive_topic)
 
     # Create a DataFrame and save it to a CSV file
-    df = pd.DataFrame(data)
-    output_dir = os.path.join(project_root, "Output")
+    output_dir = os.path.dirname(output_file)
     os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
-    output_file_path = os.path.join(output_dir, "output.csv")  # Specify the file name
-    df.to_csv(output_file_path, sep=sep, index=False)
-    print(f"Analysis completed. Results saved to {output_file_path}")
+    df = pd.DataFrame(data)
+    df.to_csv(output_file, sep=sep, index=False)
+    print(f"Analysis completed. Results saved to {output_file}")
 
 
 def main():
