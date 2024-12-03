@@ -18,7 +18,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "News_SemAn = __main__:main"
+            "SemAn = __main__:main"
             ]
         },
 )
