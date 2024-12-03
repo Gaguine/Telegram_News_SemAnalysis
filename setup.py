@@ -11,14 +11,14 @@ setup(
     description="The programs provides an analysis tool for telegram news chanel. It takes html files of said channels "
                 "and returns a csv file with information about the messages.",
     version='0.1',
-    packages=find_packages(exclude=('')),
+    packages=find_packages(where=('src')),
     install_requires=requirements,
     dependency_links=[
         'https://download.pytorch.org/whl/cpu'
     ],
     entry_points={
         "console_scripts": [
-            "SemAn = entry:main"
+            "SemAn = src.entry:main"
             ]
         },
 )

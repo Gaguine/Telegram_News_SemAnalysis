@@ -1,18 +1,21 @@
 import argparse
 import os, getpass
 import pandas as pd
-from src.Classes import Fetcher, Analyser  # Import your custom logic
+from Classes import Fetcher, Analyser  # Import your custom logic
 
 
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Text Analysis CLI using LLMs.")
 
-    # Positional command (analyse)
-    parser.add_argument('run', help='Starts the analysis')
+    # Positional command (run)
+    parser.add_argument(
+        'run',
+        help='Starts the analysis')
 
     # Get the absolute path to the `Data` folder
-    default_data_dir = os.path.join(os.path.dirname(__file__), "Data/")
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    default_data_dir = os.path.join(project_root, "Data")
 
     # Check if the `Data` directory exists
     if not os.path.exists(default_data_dir):
@@ -62,8 +65,8 @@ def parse_args():
 
 def run_analysis(html_files, output_file, sep, restriction):
     """Run the main analysis logic."""
-    script_path = os.path.dirname(__file__)
-    fetcher = Fetcher(script_path)
+    project_root = os.path.dirname(os.path.dirname(__file__))  # Get the root directory
+    fetcher = Fetcher(project_root)
     analyser = Analyser()
 
     data = {
@@ -93,7 +96,7 @@ def run_analysis(html_files, output_file, sep, restriction):
 
     # Create a DataFrame and save it to a CSV file
     df = pd.DataFrame(data)
-    output_dir = os.path.join(script_path, "Output")
+    output_dir = os.path.join(project_root, "Output")
     os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
     output_file_path = os.path.join(output_dir, "output.csv")  # Specify the file name

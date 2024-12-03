@@ -113,7 +113,7 @@ class Analyser:
         # Initialize model for sensitive topic classification
         self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
         self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
-        with open("src/id2topic.json") as f:
+        with open("id2topic.json") as f: #open the topics provided by the authors
             self.target_variables = json.load(f)
 
         # self.inappropirate_messages
