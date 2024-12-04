@@ -113,10 +113,17 @@ class Analyser:
         # Initialize model for sensitive topic classification
         self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
         self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
-        with open("id2topic.json") as f: #open the topics provided by the authors
+        project_root = os.path.dirname(os.path.dirname(__file__))  # One level above src
+        s_topic_path = os.path.join(project_root, "src", "id2topic.json")
+
+        if not os.path.exists(s_topic_path):
+            raise FileNotFoundError(f"Could not find {s_topic_path}. Make sure the file exists in the src directory.")
+
+        with open(s_topic_path) as f: #open the topics provided by the authors
             self.target_variables = json.load(f)
 
-        # self.inappropirate_messages
+        # self.inappropirate_messages(to be implemented)
+
     def sentiment_analysis(self,analysed_data:str) -> str:
         labels = ["Neutral", "Positive", "Negative"]
         inputs = self.sentiment_tokenizer(analysed_data, padding=True, return_tensors="pt")
