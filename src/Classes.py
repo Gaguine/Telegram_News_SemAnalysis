@@ -139,7 +139,7 @@ class Analyser:
         possible_labels = ['Politics', 'Economy', 'Technology', 'Sports', 'Health', 'Entertainment', 'Science',
                         'Environment', 'World News', 'Local News']
         output = self.topic_classifier_model(analysed_data, possible_labels, multi_label=False)
-        return output['labels'][0]
+        return output['labels'][0] #return the most probable prediction as message topic
     def classify_sensitive_topic(self,analysed_data:str):
         inputs = self.sensitive_topic_tokenizer(analysed_data, return_tensors="pt", truncation=True, padding=True)
         with torch.no_grad():

@@ -61,6 +61,7 @@ def run_analysis(html_files, output_file, sep, restriction):
     fetcher = Fetcher(project_root)
     analyser = Analyser()
 
+    # Initialize the data template for the final output
     data = {
         "Date": [],
         "Semantic Tag": [],
