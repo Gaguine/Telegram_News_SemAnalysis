@@ -1,7 +1,7 @@
-import os
+import os, torch, json
 from bs4 import BeautifulSoup
 from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassification
-import torch, json
+import pandas as pd
 
 
 class Tg_Message():
@@ -149,8 +149,15 @@ class Analyser:
         return predicted_sensitive_topic
 class Displayer:
     """
-    The Displayer will create the csv file.
+    The Displayer will create the csv file. Displays the data.
     """
+    def __init__(self,data):
+        self.data = data
+
+    def create_csv(self,output_file,sep):
+        df = pd.DataFrame(self.data)
+        df.to_csv(output_file, sep=sep, index=False)
+        print(f"Analysis completed. Results saved to {output_file}")
 
 
 # """"Testing the classes"""

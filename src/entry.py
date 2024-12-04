@@ -1,8 +1,18 @@
 import argparse
 import os
 import pandas as pd
-from Classes import Fetcher, Analyser  # Import your custom classes
+from Classes import Fetcher, Analyser, Displayer
 
+def show_sick_banner():
+    banner = """
+························································
+:                                                      :
+:  ░█▀█░█▀▀░█░█░█▀▀░░░█▀█░█▀█░█▀█░█░░░█░█░█▀▀░▀█▀░█▀▀  :
+:  ░█░█░█▀▀░█▄█░▀▀█░░░█▀█░█░█░█▀█░█░░░░█░░▀▀█░░█░░▀▀█  :
+:  ░▀░▀░▀▀▀░▀░▀░▀▀▀░░░▀░▀░▀░▀░▀░▀░▀▀▀░░▀░░▀▀▀░▀▀▀░▀▀▀  :
+:                                                      :
+························································"""
+    print(banner)
 
 def parse_args():
     """Parse command-line arguments."""
@@ -91,12 +101,13 @@ def run_analysis(html_files, output_file, sep, restriction):
     output_dir = os.path.dirname(output_file)
     os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
-    df = pd.DataFrame(data)
-    df.to_csv(output_file, sep=sep, index=False)
-    print(f"Analysis completed. Results saved to {output_file}")
+    displayer = Displayer(data)
+    displayer.create_csv(output_file,sep)
 
 
 def main():
+    show_sick_banner()
+
     args = parse_args()
 
     if args.run == 'run':  # Check if the 'run' command is provided
