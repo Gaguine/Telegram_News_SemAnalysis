@@ -13,7 +13,6 @@ def show_sick_banner():
 :                                                      :
 ························································"""
     print(banner)
-
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Text Analysis CLI using LLMs.")

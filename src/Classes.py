@@ -163,8 +163,6 @@ class Filter:
     def filter_data(self,data:pd.DataFrame,user_topic)->pd.DataFrame:
         filtered_by_topic = data[data["Label"].str.contains(user_topic,case=False)]
         return filtered_by_topic
-
-
 class Displayer:
     """
     The Displayer will create the csv file. Displays the data.
