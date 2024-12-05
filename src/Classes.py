@@ -1,7 +1,7 @@
-import os
+import os, torch, json
 from bs4 import BeautifulSoup
 from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassification
-import torch, json
+import pandas as pd
 
 
 class Tg_Message():
@@ -26,6 +26,9 @@ class Tg_Message():
         self.text = text
         self.date = date
         self.contents={}
+        self.topic = None
+        self.sentiment = None
+        self.sensitive_topic = None
 
     def assign_topic(self,topic:str): # wil it be a good idea to create just one method for them all?
         self.topic = topic
@@ -147,10 +150,29 @@ class Analyser:
         predicted_class = torch.argmax(outputs.logits).item()
         predicted_sensitive_topic = self.target_variables[str(predicted_class)]
         return predicted_sensitive_topic
+class Filter:
+    """This class edits the resulting dataframe for topic, sensitive topic and date filtration."""
+    def __init__(self):
+        self.topic_filter = ['Politics', 'Economy', 'Technology', 'Sports', 'Health', 'Entertainment', 'Science',
+                        'Environment', 'World News', 'Local News']
+        self.date_filter = None
+    def add_date(self,date:str):
+        self.date_filter = date
+
+
+    def filter_data(self,data:pd.DataFrame,user_topic)->pd.DataFrame:
+        filtered_by_topic = data[data["Label"].str.contains(user_topic,case=False)]
+        return filtered_by_topic
 class Displayer:
     """
-    The Displayer will create the csv file.
+    The Displayer will create the csv file. Displays the data.
     """
+    def __init__(self,data):
+        self.data = data
+
+    def create_csv(self,output_file,sep):
+        self.data.to_csv(output_file, sep=sep, index=False)
+        print(f"Analysis completed. Results saved to {output_file}")
 
 
 # """"Testing the classes"""
