@@ -1,7 +1,7 @@
 import argparse
 import os
 import pandas as pd
-from src.Classes import Fetcher, Analyser, Displayer, Filter
+from Classes import Fetcher, Analyser, Displayer, Filter
 
 def show_sick_banner():
     banner = """
@@ -55,8 +55,8 @@ def parse_args():
         '-re',
         '--restriction',
         type=int,
-        default=5,
-        help="Maximum number of messages to process. Default is 5."
+        default=-1,
+        help="Maximum number of messages to process. Default is -1."
     )
     parser.add_argument('-ft','--filter-topic',
                         help="Filter results by topic. Possible topics:"
@@ -72,7 +72,7 @@ def run_analysis(html_files, restriction) -> pd.DataFrame:
         "Date": [],
         "Semantic Tag": [],
         "Label": [],
-        "Sensitive Topic": [],
+        # "Sensitive Topic": [],
     }
 
     for html_file in html_files:
