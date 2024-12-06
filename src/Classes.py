@@ -102,54 +102,73 @@ class Fetcher:
         return message_list[:restriction] # add message restriction for better performance
 class Analyser:
     """
-    The Analyser class boots up the LLMs, and provides the prediction for topic, sentiment, and sensitive topic for the
-    text provided.
+    The Analyser class provides predictions for topic, sentiment, and sensitive topics for the text provided.
     """
     def __init__(self):
-        #Initializing model for sentiment analysis
-        self.sentiment_tokenizer = AutoTokenizer.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
-        self.sentiment_analysis_model = AutoModelForSequenceClassification.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+        self.sentiment_tokenizer = None
+        self.sentiment_analysis_model = None
+        self.topic_classifier_model = None
+        self.sensitive_topic_tokenizer = None
+        self.sensitive_topic_model = None
 
-        #Initialiaze model for zero-shot classification
-        self.topic_classifier_model = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
-
-        # Initialize model for sensitive topic classification
-        self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
-        self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
+        # Load sensitive topic mapping
         project_root = os.getcwd()
         s_topic_path = os.path.join(project_root, "src", "id2topic.json")
 
         if not os.path.exists(s_topic_path):
             raise FileNotFoundError(f"Could not find {s_topic_path}. Make sure the file exists in the src directory.")
 
-        with open(s_topic_path) as f:  # open the topics provided by the authors
+        with open(s_topic_path) as f:
             self.target_variables = json.load(f)
 
-        # self.inappropirate_messages(to be implemented)
+    def load_sentiment_model(self):
+        if self.sentiment_tokenizer is None or self.sentiment_analysis_model is None:
+            self.sentiment_tokenizer = AutoTokenizer.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
+            self.sentiment_analysis_model = AutoModelForSequenceClassification.from_pretrained("MonoHime/rubert-base-cased-sentiment-new")
 
-    def sentiment_analysis(self,analysed_data:str) -> str:
+    def load_topic_model(self):
+        if self.topic_classifier_model is None:
+            self.topic_classifier_model = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
+
+    def load_sensitive_topic_model(self):
+        if self.sensitive_topic_tokenizer is None or self.sensitive_topic_model is None:
+            self.sensitive_topic_tokenizer = AutoTokenizer.from_pretrained("apanc/russian-sensitive-topics")
+            self.sensitive_topic_model = AutoModelForSequenceClassification.from_pretrained("apanc/russian-sensitive-topics")
+
+    def sentiment_analysis(self, analysed_data: str) -> str:
+        # self.load_sentiment_model()
+
         labels = ["Neutral", "Positive", "Negative"]
         inputs = self.sentiment_tokenizer(analysed_data, padding=True, return_tensors="pt")
 
         with torch.no_grad():
             outputs = self.sentiment_analysis_model(**inputs)
 
-        # Extract predicted sentiment
         predicted_class = torch.argmax(outputs.logits).item()
-        sentiment = labels[predicted_class]
-        return sentiment
-    def classify_topic(self,analysed_data:str):
+        return labels[predicted_class]
+
+    def classify_topic(self, analysed_data: str):
+
         possible_labels = ['Politics', 'Economy', 'Technology', 'Sports', 'Health', 'Entertainment', 'Science',
-                        'Environment', 'World News', 'Local News']
+                           'Environment', 'World News', 'Local News']
         output = self.topic_classifier_model(analysed_data, possible_labels, multi_label=False)
-        return output['labels'][0] #return the most probable prediction as message topic
-    def classify_sensitive_topic(self,analysed_data:str):
+        return output['labels'][0]
+
+    def classify_sensitive_topic(self, analysed_data: str):
+
         inputs = self.sensitive_topic_tokenizer(analysed_data, return_tensors="pt", truncation=True, padding=True)
         with torch.no_grad():
             outputs = self.sensitive_topic_model(**inputs)
         predicted_class = torch.argmax(outputs.logits).item()
-        predicted_sensitive_topic = self.target_variables[str(predicted_class)]
-        return predicted_sensitive_topic
+        return self.target_variables[str(predicted_class)]
+
+    def clear_models(self):
+        """Clear all loaded models from memory."""
+        self.sentiment_tokenizer = None
+        self.sentiment_analysis_model = None
+        self.topic_classifier_model = None
+        self.sensitive_topic_tokenizer = None
+        self.sensitive_topic_model = None
 class Filter:
     """This class edits the resulting dataframe for topic, sensitive topic and date filtration."""
     def __init__(self):

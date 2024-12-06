@@ -97,6 +97,7 @@ def create_timeline(data: pd.DataFrame):
 
 user_topic = "politics"
 data = pd.read_csv("output (3).csv",sep='|')
+create_timeline(data)
 
 
 

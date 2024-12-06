@@ -62,13 +62,12 @@ def parse_args():
                         help="Filter results by topic. Possible topics:"
                              "Politics, Economy, Technology, Sports, Health, Entertainment, Science, Environment,World News, Local News")
     return parser.parse_args()
-def run_analysis(html_files, restriction)->pd.DataFrame:
+def run_analysis(html_files, restriction) -> pd.DataFrame:
     """Run the main analysis logic."""
-    project_root = os.getcwd()  # Use the current working directory as the root
+    project_root = os.getcwd()
     fetcher = Fetcher(project_root)
     analyser = Analyser()
 
-    # Initialize the data template for the final output
     data = {
         "Date": [],
         "Semantic Tag": [],
@@ -78,23 +77,36 @@ def run_analysis(html_files, restriction)->pd.DataFrame:
 
     for html_file in html_files:
         print(f"Processing file: {html_file}")
-        fetcher.html_path = html_file  # Set the HTML path in Fetcher
+        fetcher.html_path = html_file
         bs_messages = fetcher.read_html()
         message_list = fetcher.create_messages(bs_messages, restriction)
 
-        for message in message_list:
-            topic = analyser.classify_topic(message.text)
-            sentiment = analyser.sentiment_analysis(message.text)
-            sensitive_topic = analyser.classify_sensitive_topic(message.text)
+    print(f"Collected {len(message_list)} messages. Commencing LLM analysis")
 
-            message.assign_new_labels(topic, sentiment, sensitive_topic)
+    # do a step-by-step analysis: Begin with semantic tag
+    analyser.load_sentiment_model
+    for message in message_list:
 
-            data["Date"].append(message.date)
-            data["Semantic Tag"].append(message.sentiment)
-            data["Label"].append(message.topic)
-            data["Sensitive Topic"].append(message.sensitive_topic)
-        df = pd.DataFrame(data)
-    return df
+        sentiment = analyser.sentiment_analysis(message.text)
+        # sensitive_topic = analyser.classify_sensitive_topic(message.text)
+        message.assign_sentiment(sentiment)
+        data["Date"].append(message.date)
+        data["Semantic Tag"].append(message.sentiment)
+    analyser.clear_models()
+    print("Semantic analysis completed")
+
+    # start topic analysis
+    analyser.load_topic_model
+    for message in message_list:
+        topic = analyser.classify_topic(message.text)
+        message.assign_topic(topic)
+        data["Label"].append(message.topic)
+        # data["Sensitive Topic"].append(message.sensitive_topic)
+    analyser.clear_models()
+    print("Topic analysis completed")
+    # Add Sensitive Topic Analysis
+    print("Analysis completed.")
+    return pd.DataFrame(data)
 def display_output(data:pd.DataFrame,output_file, sep):
     output_dir = os.path.dirname(output_file)
     os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
