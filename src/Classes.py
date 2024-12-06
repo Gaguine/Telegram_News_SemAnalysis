@@ -4,7 +4,7 @@ from transformers import pipeline,AutoTokenizer, AutoModelForSequenceClassificat
 import pandas as pd
 
 
-class Tg_Message():
+class TgMessage():
     """this class will create objects resembling telegram messages, but with a dictionary-like structure.
     A sort of container.
     It will have the following attributes:
@@ -96,7 +96,7 @@ class Fetcher:
                 date = message.find('div', class_='pull_right date details').get('title')
 
                 date = date[:10].replace(".","/")
-                message = Tg_Message(text, date)
+                message = TgMessage(text, date)
                 message_list.append(message)
 
         return message_list[:restriction] # add message restriction for better performance

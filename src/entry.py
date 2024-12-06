@@ -1,7 +1,7 @@
 import argparse
 import os
 import pandas as pd
-from Classes import Fetcher, Analyser, Displayer, Filter
+from src.Classes import Fetcher, Analyser, Displayer, Filter
 
 def show_sick_banner():
     banner = """
@@ -84,7 +84,7 @@ def run_analysis(html_files, restriction) -> pd.DataFrame:
     print(f"Collected {len(message_list)} messages. Commencing LLM analysis")
 
     # do a step-by-step analysis: Begin with semantic tag
-    analyser.load_sentiment_model
+    analyser.load_sentiment_model()
     for message in message_list:
 
         sentiment = analyser.sentiment_analysis(message.text)
@@ -96,7 +96,7 @@ def run_analysis(html_files, restriction) -> pd.DataFrame:
     print("Semantic analysis completed")
 
     # start topic analysis
-    analyser.load_topic_model
+    analyser.load_topic_model()
     for message in message_list:
         topic = analyser.classify_topic(message.text)
         message.assign_topic(topic)
