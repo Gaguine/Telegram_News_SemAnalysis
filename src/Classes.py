@@ -188,14 +188,49 @@ class Displayer:
     The Displayer generates the data in the output folder. Using the provided data, usually a pd.DF it can generate a
     tabular file(CSV) and visualise the data using matplotlib.
     """
-    def __init__(self,data):
+    def __init__(self,data:pd.DataFrame):
         self.data = data
-    # Gnerate csv file
-    def create_csv(self,output_file,sep):
+    # Generate csv file
+    def create_csv(self,output_file:str,sep):
         self.data.to_csv(output_file, sep=sep, index=False)
         print(f"Analysis completed. Results saved to {output_file}")
+    # fix the function below to accommodate correct pathing
+    def extract_labels_from_output_csv(self, output_dir: str, file_name: str = "output.csv") -> list:
+        """
+        Reads the default output CSV file and extracts unique labels (topics) from the 'Label' column.
+
+        Args:
+            output_dir (str): Path to the output directory where the CSV file is saved.
+            file_name (str): Name of the output CSV file. Defaults to "output.csv".
+
+        Returns:
+            list: A list of unique labels as strings.
+        """
+        try:
+            # Construct the full path to the output file
+            file_path = os.path.join(output_dir, file_name)
+
+            # Load the CSV file
+            data = pd.read_csv(file_path, delimiter='|')
+
+            # Extract unique labels from the 'Label' column
+            unique_labels = data['Label'].str.strip().unique()
+
+            # Convert to a list of strings
+            labels_list = list(unique_labels)
+            return labels_list
+        except FileNotFoundError:
+            print(f"File not found: {file_path}")
+            return []
+        except KeyError:
+            print("The provided file does not contain a 'Label' column.")
+            return []
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return []
+
     # Visualising the Data
-    def create_timeline_by_topic(self, user_topic, data: pd.DataFrame):
+    def create_timeline_by_topic(self, user_topic, data: pd.DataFrame)->plt:
         try:
             # Check if the user_topic exists in the dataset
             if user_topic in data["Label"].unique():
@@ -220,14 +255,14 @@ class Displayer:
                 plt.ylabel("Semantic Tags Sum")
                 plt.grid(True)
                 plt.tight_layout()
-                plt.show()
+                return plt
             else:
                 print(f"Topic '{user_topic}' not found in the data. Please try another topic.")
         except KeyError as e:
             print(f"KeyError: {e}. Ensure the column names in the dataset are correct.")
         except Exception as e:
             print(f"An error occurred: {e}")
-    def create_hist_by_topic(self, user_topic, data: pd.DataFrame):
+    def create_hist_by_topic(self, user_topic, data: pd.DataFrame)->plt:
         try:
             # Check if the user_topic exists in the dataset
             if user_topic in set(data["Label"]):
@@ -245,12 +280,12 @@ class Displayer:
                 plt.xticks(['Negative', 'Neutral', 'Positive'])
                 plt.grid(axis='y', linestyle='--', alpha=0.7)
                 plt.tight_layout()
-                plt.show()
+                return plt
             else:
                 raise ValueError(f"Topic '{user_topic}' not found in the data.")
         except KeyError as k:
             print(f"KeyError: {k}. Ensure the column names are correct.")
-    def create_general_timeline(self, data: pd.DataFrame):
+    def create_general_timeline(self, data: pd.DataFrame)->plt:
         """
             Create a timeline plot showing the sum of semantic tags over time.
 
@@ -281,8 +316,8 @@ class Displayer:
         plt.grid()
         plt.xticks(daily_semantic_sum['Date'], rotation=45)
         plt.tight_layout()
-        plt.show()
-    def create_general_hist(self, data:pd.DataFrame):
+        return plt
+    def create_general_hist(self, data: pd.DataFrame)->plt:
         """
            Create a histogram showing the frequency of semantic tags across all topics.
 
@@ -302,12 +337,98 @@ class Displayer:
             plt.xticks(['Negative', 'Neutral', 'Positive'])
             plt.grid(axis='y', linestyle='--', alpha=0.7)
             plt.tight_layout()
-            plt.show()
+            return plt
 
         except KeyError as k:
             print(f"KeyError: {k}. Ensure the column names are correct.")
         except Exception as e:
             print(f"An error occurred: {e}")
+    # to-add to main.py
+    def create_topic_frequency_hist(self,topic_list: list, data: pd.DataFrame) -> plt:
+        """
+        Creates a histogram showing the frequency of topics (labels) in the provided data.
+
+        Args:
+            data (pd.DataFrame): The dataset containing the 'Label' column.
+            topic_list (list): A list of topics to include in the histogram.
+
+        Returns:
+            plt: The matplotlib plot object.
+        """
+        try:
+            # Ensure the 'Label' column exists in the data
+            if "Label" not in data.columns:
+                raise KeyError("The dataset does not contain a 'Label' column.")
+
+            # Count the frequency of each topic in the dataset
+            topic_counts = data['Label'].value_counts()
+
+            # Filter for the provided topic list to ensure all topics are included
+            filtered_counts = topic_counts.reindex(topic_list, fill_value=0)
+
+            # Plot the histogram
+            plt.figure(figsize=(10, 6))
+            plt.bar(filtered_counts.index, filtered_counts.values, color='skyblue', edgecolor='black')
+            plt.title("Frequency of Topics in the Dataset")
+            plt.xlabel("Topic")
+            plt.ylabel("Frequency")
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            plt.tight_layout()
+            return plt
+        except KeyError as e:
+            print(f"KeyError: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+    def create_topic_dynamics_timeline(self,topic_list: list, data: pd.DataFrame) -> plt:
+        """
+        Creates a timeline showing the occurrence of topics over time, ensuring all dates are included.
+        Topics are assigned numeric IDs on the Y-axis.
+
+        Args:
+            data (pd.DataFrame): The dataset containing the 'Date' and 'Label' columns.
+            topic_list (list): The list of topics to include, each assigned a numeric ID.
+
+        Returns:
+            plt: The matplotlib plot object.
+        """
+        try:
+            # Ensure required columns exist
+            if "Date" not in data.columns or "Label" not in data.columns:
+                raise KeyError("The dataset must contain 'Date' and 'Label' columns.")
+
+            # Assign numeric IDs to topics
+            topic_map = {topic: idx + 1 for idx, topic in enumerate(topic_list)}
+            data['Topic ID'] = data['Label'].map(topic_map)
+
+            # Convert 'Date' to datetime format
+            data['Date'] = pd.to_datetime(data['Date'], format='%d/%m/%Y')
+
+            # Generate a full date range from the dataset
+            full_date_range = pd.date_range(start=data['Date'].min(), end=data['Date'].max())
+
+            # Plot the timeline
+            plt.figure(figsize=(14, 8))
+            for topic, topic_id in topic_map.items():
+                topic_data = data[data['Topic ID'] == topic_id]
+                plt.scatter(topic_data['Date'], topic_data['Topic ID'], label=topic, s=50)
+
+            plt.xticks(full_date_range, rotation=45)
+            plt.yticks(range(1, len(topic_list) + 1), topic_list)
+            plt.title("Topic Popularity Timeline (All Dates)")
+            plt.xlabel("Date")
+            plt.ylabel("Topics")
+            plt.grid(True)
+            plt.legend(title="Topics", bbox_to_anchor=(1.05, 1), loc='upper left')
+            plt.tight_layout()
+            return plt
+        except KeyError as e:
+            print(f"KeyError: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+
+    def save_plt(self,output_file:str, plt:plt):
+        plt.savefigure(output_file)
 
 
 # """"Testing the classes"""

@@ -1,5 +1,7 @@
 import argparse
 import os
+
+
 import pandas as pd
 from Classes import Fetcher, Analyser, Displayer, Filter
 
@@ -17,10 +19,6 @@ def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Text Analysis CLI using LLMs.")
 
-    # Positional command (run)
-    parser.add_argument(
-        'run', help='Starts the analysis')
-
     # Paths for Data and Output folders
     project_root = os.getcwd()
     default_data_dir = os.path.join(project_root, "Data")
@@ -34,6 +32,39 @@ def parse_args():
     default_html_files = [
         os.path.join(default_data_dir, f) for f in os.listdir(default_data_dir) if f.endswith(".html")
     ]
+
+    # Positional command (run)
+    parser.add_argument(
+        'run', help='Starts the analysis')
+
+    # Positional command (visualize)
+    parser.add_argument(
+        'visualize', help='Visualise the csv output.' # Add error handling no csv file found in the output directory.
+    )
+    parser.add_argument(
+        "-gt","--general_timeline", help="Create a general timeline from the csv output."
+    )
+    parser.add_argument(
+        "-tt", "--topic_timeline",
+        help="Create topic timeline from the csv output. Provide topic from the csv output.",
+        default=None
+    )
+    parser.add_argument(
+        "-gh","--general_histogram",help="Create a general histogram from the csv output."
+    )
+    parser.add_argument(
+        "-th","--topic_histogram", help="Create topic histogram from the csv output. Provide topic from the csv output."
+    )
+    parser.add_argument(
+        "-tdt", "--topic_dynamics_timeline",
+        help="Create a dynamics timeline for all topics."
+    )
+    parser.add_argument(
+        "-tfh", "--topic_frequency_hist",
+        help="Create a topic frequency histogram."
+    )
+
+
 
     parser.add_argument(
         '--html',
@@ -62,6 +93,7 @@ def parse_args():
                         help="Filter results by topic. Possible topics:"
                              "Politics, Economy, Technology, Sports, Health, Entertainment, Science, Environment,World News, Local News")
     return parser.parse_args()
+
 def run_analysis(html_files, restriction) -> pd.DataFrame:
     """Run the main analysis logic."""
     project_root = os.getcwd()
@@ -114,8 +146,65 @@ def display_output(data:pd.DataFrame,output_file, sep):
     # Create a DataFrame and save it to a CSV file
     displayer = Displayer(data)
     displayer.create_csv(output_file,sep)
+def display_graph(data: pd.DataFrame, args,topic_list=None):
+    """Handles graph creation and visualization logic."""
+    displayer = Displayer(data)
 
+    if args.general_timeline:
+        print("Creating general timeline...")
+        plt_obj = displayer.create_general_timeline(data)
+        output_path = os.path.join(args.general_timeline)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        plt_obj.savefig(output_path)
+        print(f"General timeline saved at {output_path}")
+    if args.general_histogram:
+        print("Creating general histogram...")
+        plt_obj = displayer.create_general_hist(data)
+        output_path = os.path.join(args.general_histogram)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        plt_obj.savefig(output_path)
+        print(f"General histogram saved at {output_path}")
 
+    if args.topic_timeline:
+        print(f"Creating topic timeline for topic: {args.topic_timeline}")
+        plt_obj = displayer.create_timeline_by_topic(args.topic_timeline, data)
+        if plt_obj:  # Ensure a valid plot was created
+            output_path = os.path.join(args.topic_timeline)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            plt_obj.savefig(output_path)
+            print(f"Topic timeline saved at {output_path}")
+        else:
+            print(f"Failed to create topic timeline for topic: {args.topic_timeline}")
+    if args.topic_histogram:
+        print(f"Creating topic histogram for topic: {args.topic_histogram}")
+        plt_obj = displayer.create_hist_by_topic(args.topic_histogram, data)
+        if plt_obj:  # Ensure a valid plot was created
+            output_path = os.path.join(args.topic_histogram)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            plt_obj.savefig(output_path)
+            print(f"Topic histogram saved at {output_path}")
+        else:
+            print(f"Failed to create topic histogram for topic: {args.topic_histogram}")
+
+    if args.topic_dynamics_timeline:
+        plt_obj = displayer.create_topic_dynamics_timeline(topic_list,data)
+        if plt_obj:  # Ensure a valid plot was created
+            output_path = os.path.join(args.topic_dynamics_timeline)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            plt_obj.savefig(output_path)
+            print(f"Topic dynamics timeline saved at {output_path}")
+        else:
+            print(f"Failed to create topic timeline for topic: {args.topic_dynamics_timeline}")
+    if args.topic_frequency_hist:
+        print(f"Creating topic frequency histogram: {args.topic_frequency_histogram}")
+        plt_obj = displayer.create_topic_frequency_hist(topic_list,data)
+        if plt_obj:
+            output_path = os.path.join(args.topic_frequency_histogram)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            plt_obj.savefig(output_path)
+            print(f"Topic histogram saved at {output_path}")
+        else:
+            print(f"Creating topic frequency histogram: {args.topic_frequency_hist}")
 
 
 def main():
@@ -132,8 +221,17 @@ def main():
             data = filter.filter_data(data, user_topic=args.filter_topic)
 
         display_output(data, args.output, args.sep)
+
+    elif args.run == 'visualize':  # Check if the 'visualize' command is provided
+        if os.path.exists(args.output):
+            print(f"Loading data from {args.output}...")
+            data = pd.read_csv(args.output, sep=args.sep)
+            topic_list = list(set(data["Label"]))
+            display_graph(data, args,topic_list=topic_list)
+        else:
+            print(f"CSV output file not found: {args.output}. Please run analysis first.")
     else:
-        print("Invalid command. Use 'run' to start the analysis.")
+        print("Invalid command. Use 'run' to start the analysis. Use 'visualize' to create timeline or histogram.")
 
 
 if __name__ == "__main__":
