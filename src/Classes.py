@@ -229,63 +229,7 @@ class Displayer:
             print(f"An error occurred: {e}")
             return []
 
-    # Visualising the Data
-    def create_timeline_by_topic(self, user_topic, data: pd.DataFrame)->plt:
-        try:
-            # Check if the user_topic exists in the dataset
-            if user_topic in data["Label"].unique():
-                # Filter the data for the selected topic
-                filtered_data = data[data['Label'] == user_topic]
-
-                # Convert the 'Date' column to datetime format
-                filtered_data['Date'] = pd.to_datetime(filtered_data['Date'], format='%d/%m/%Y')
-
-                # Map semantic tags to numeric values
-                semantic_map = {'Negative': -1, 'Neutral': 0, 'Positive': 1}
-                filtered_data['Semantic Tag Encoded'] = filtered_data['Semantic Tag'].map(semantic_map)
-
-                # Group by date and calculate the sum
-                grouped_data = filtered_data.groupby('Date')['Semantic Tag Encoded'].sum().reset_index()
-
-                # Plot the timeline
-                plt.figure(figsize=(12, 6))
-                plt.plot(grouped_data['Date'], grouped_data['Semantic Tag Encoded'], marker='o', linestyle='-')
-                plt.title(f"Semantic Tags Timeline for Topic: {user_topic}")
-                plt.xlabel("Date")
-                plt.ylabel("Semantic Tags Sum")
-                plt.grid(True)
-                plt.tight_layout()
-                return plt
-            else:
-                print(f"Topic '{user_topic}' not found in the data. Please try another topic.")
-        except KeyError as e:
-            print(f"KeyError: {e}. Ensure the column names in the dataset are correct.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-    def create_hist_by_topic(self, user_topic, data: pd.DataFrame)->plt:
-        try:
-            # Check if the user_topic exists in the dataset
-            if user_topic in set(data["Label"]):
-                filtered_data = data[data['Label'] == user_topic]
-
-                # Map semantic tags to numeric values
-                semantic_counts = filtered_data['Semantic Tag'].value_counts()
-
-                # Plot the histogram
-                plt.figure(figsize=(8, 5))
-                plt.bar(semantic_counts.index, semantic_counts.values, color='skyblue', edgecolor='black')
-                plt.title(f"Frequency of Semantic Tags for Topic: {user_topic}")
-                plt.xlabel("Semantic Tag")
-                plt.ylabel("Frequency")
-                plt.xticks(['Negative', 'Neutral', 'Positive'])
-                plt.grid(axis='y', linestyle='--', alpha=0.7)
-                plt.tight_layout()
-                return plt
-            else:
-                raise ValueError(f"Topic '{user_topic}' not found in the data.")
-        except KeyError as k:
-            print(f"KeyError: {k}. Ensure the column names are correct.")
-    def create_general_timeline(self, data: pd.DataFrame)->plt:
+    def create_general_timeline(self, data: pd.DataFrame) -> plt:
         """
             Create a timeline plot showing the sum of semantic tags over time.
 
@@ -317,67 +261,6 @@ class Displayer:
         plt.xticks(daily_semantic_sum['Date'], rotation=45)
         plt.tight_layout()
         return plt
-    def create_general_hist(self, data: pd.DataFrame)->plt:
-        """
-           Create a histogram showing the frequency of semantic tags across all topics.
-
-           Parameters:
-           - data (pd.DataFrame): A DataFrame containing a 'Semantic Tag' column.
-           """
-        try:
-            # Map semantic tags to numeric values (optional, not needed for counts)
-            semantic_counts = data['Semantic Tag'].value_counts()
-
-            # Plot the histogram
-            plt.figure(figsize=(8, 5))
-            plt.bar(semantic_counts.index, semantic_counts.values, color='skyblue', edgecolor='black')
-            plt.title("Frequency of Semantic Tags Across All Topics")
-            plt.xlabel("Semantic Tag")
-            plt.ylabel("Frequency")
-            plt.xticks(['Negative', 'Neutral', 'Positive'])
-            plt.grid(axis='y', linestyle='--', alpha=0.7)
-            plt.tight_layout()
-            return plt
-
-        except KeyError as k:
-            print(f"KeyError: {k}. Ensure the column names are correct.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-    def create_topic_frequency_hist(self,topic_list: list, data: pd.DataFrame) -> plt:
-        """
-        Creates a histogram showing the frequency of topics (labels) in the provided data.
-
-        Args:
-            data (pd.DataFrame): The dataset containing the 'Label' column.
-            topic_list (list): A list of topics to include in the histogram.
-
-        Returns:
-            plt: The matplotlib plot object.
-        """
-        try:
-            # Ensure the 'Label' column exists in the data
-            if "Label" not in data.columns:
-                raise KeyError("The dataset does not contain a 'Label' column.")
-
-            # Count the frequency of each topic in the dataset
-            topic_counts = data['Label'].value_counts()
-
-            # Filter for the provided topic list to ensure all topics are included
-            filtered_counts = topic_counts.reindex(topic_list, fill_value=0)
-
-            # Plot the histogram
-            plt.figure(figsize=(10, 6))
-            plt.bar(filtered_counts.index, filtered_counts.values, color='skyblue', edgecolor='black')
-            plt.title("Frequency of Topics in the Dataset")
-            plt.xlabel("Topic")
-            plt.ylabel("Frequency")
-            plt.grid(axis='y', linestyle='--', alpha=0.7)
-            plt.tight_layout()
-            return plt
-        except KeyError as e:
-            print(f"KeyError: {e}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
     def create_topic_dynamics_timeline(self,topic_list: list, data: pd.DataFrame) -> plt:
         """
         Creates a timeline showing the occurrence of topics over time, ensuring all dates are included.
@@ -422,6 +305,126 @@ class Displayer:
             return plt
         except KeyError as e:
             print(f"KeyError: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+    def create_general_hist(self, data: pd.DataFrame) -> plt:
+        """
+           Create a histogram showing the frequency of semantic tags across all topics.
+
+           Parameters:
+           - data (pd.DataFrame): A DataFrame containing a 'Semantic Tag' column.
+           """
+        try:
+            # Map semantic tags to numeric values (optional, not needed for counts)
+            semantic_counts = data['Semantic Tag'].value_counts()
+
+            # Plot the histogram
+            plt.figure(figsize=(8, 5))
+            plt.bar(semantic_counts.index, semantic_counts.values, color='skyblue', edgecolor='black')
+            plt.title("Frequency of Semantic Tags Across All Topics")
+            plt.xlabel("Semantic Tag")
+            plt.ylabel("Frequency")
+            plt.xticks(['Negative', 'Neutral', 'Positive'])
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            plt.tight_layout()
+            return plt
+
+        except KeyError as k:
+            print(f"KeyError: {k}. Ensure the column names are correct.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+    def create_hist_by_topic(self, user_topic, data: pd.DataFrame)->plt:
+        try:
+            # Check if the user_topic exists in the dataset
+            if user_topic in set(data["Label"]):
+                filtered_data = data[data['Label'] == user_topic]
+
+                # Map semantic tags to numeric values
+                semantic_counts = filtered_data['Semantic Tag'].value_counts()
+
+                # Plot the histogram
+                plt.figure(figsize=(8, 5))
+                plt.bar(semantic_counts.index, semantic_counts.values, color='skyblue', edgecolor='black')
+                plt.title(f"Frequency of Semantic Tags for Topic: {user_topic}")
+                plt.xlabel("Semantic Tag")
+                plt.ylabel("Frequency")
+                plt.xticks(['Negative', 'Neutral', 'Positive'])
+                plt.grid(axis='y', linestyle='--', alpha=0.7)
+                plt.tight_layout()
+                return plt
+            else:
+                raise ValueError(f"Topic '{user_topic}' not found in the data.")
+        except KeyError as k:
+            print(f"KeyError: {k}. Ensure the column names are correct.")
+
+    def create_topic_frequency_hist(self,topic_list: list, data: pd.DataFrame) -> plt:
+        """
+        Creates a histogram showing the frequency of topics (labels) in the provided data.
+
+        Args:
+            data (pd.DataFrame): The dataset containing the 'Label' column.
+            topic_list (list): A list of topics to include in the histogram.
+
+        Returns:
+            plt: The matplotlib plot object.
+        """
+        try:
+            # Ensure the 'Label' column exists in the data
+            if "Label" not in data.columns:
+                raise KeyError("The dataset does not contain a 'Label' column.")
+
+            # Count the frequency of each topic in the dataset
+            topic_counts = data['Label'].value_counts()
+
+            # Filter for the provided topic list to ensure all topics are included
+            filtered_counts = topic_counts.reindex(topic_list, fill_value=0)
+
+            # Plot the histogram
+            plt.figure(figsize=(10, 6))
+            plt.bar(filtered_counts.index, filtered_counts.values, color='skyblue', edgecolor='black')
+            plt.title("Frequency of Topics in the Dataset")
+            plt.xlabel("Topic")
+            plt.ylabel("Frequency")
+            plt.grid(axis='y', linestyle='--', alpha=0.7)
+            plt.tight_layout()
+            return plt
+        except KeyError as e:
+            print(f"KeyError: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+
+# Visualising the Data
+    def create_timeline_by_topic(self, user_topic, data: pd.DataFrame)->plt:
+        try:
+            # Check if the user_topic exists in the dataset
+            if user_topic in data["Label"].unique():
+                # Filter the data for the selected topic
+                filtered_data = data[data['Label'] == user_topic]
+
+                # Convert the 'Date' column to datetime format
+                filtered_data['Date'] = pd.to_datetime(filtered_data['Date'], format='%d/%m/%Y')
+
+                # Map semantic tags to numeric values
+                semantic_map = {'Negative': -1, 'Neutral': 0, 'Positive': 1}
+                filtered_data['Semantic Tag Encoded'] = filtered_data['Semantic Tag'].map(semantic_map)
+
+                # Group by date and calculate the sum
+                grouped_data = filtered_data.groupby('Date')['Semantic Tag Encoded'].sum().reset_index()
+
+                # Plot the timeline
+                plt.figure(figsize=(12, 6))
+                plt.plot(grouped_data['Date'], grouped_data['Semantic Tag Encoded'], marker='o', linestyle='-')
+                plt.title(f"Semantic Tags Timeline for Topic: {user_topic}")
+                plt.xlabel("Date")
+                plt.ylabel("Semantic Tags Sum")
+                plt.grid(True)
+                plt.tight_layout()
+                return plt
+            else:
+                print(f"Topic '{user_topic}' not found in the data. Please try another topic.")
+        except KeyError as e:
+            print(f"KeyError: {e}. Ensure the column names in the dataset are correct.")
         except Exception as e:
             print(f"An error occurred: {e}")
 

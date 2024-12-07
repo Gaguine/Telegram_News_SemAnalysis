@@ -30,17 +30,17 @@ def parse_args():
     # 'visualize' subcommand
     visualize_parser = subparsers.add_parser('visualize', help='Visualize the analysis output.')
     visualize_parser.add_argument('-gt', '--general_timeline', action='store_true',
-                                  help='Create a general timeline from the csv output.')
+                                  help='Create a general timeline of the Semantic Tag from the csv output.')
     visualize_parser.add_argument('-tt', '--topic_timeline', action='store_true',
-                                  help='Create topic timeline from the csv output.')
+                                  help='Create topic popularity dynamics timeline from the csv output.') #Topic dynamics
     visualize_parser.add_argument('-gh', '--general_histogram', action='store_true',
-                                  help='Create a general histogram from the csv output.')
+                                  help='Create a general histogram of the Semantic Tag from the csv output.')
     visualize_parser.add_argument('-th', '--topic_histogram', action='store_true',
-                                  help='Create a topic histogram from the csv output.')
+                                  help='Create a topic histogram from the csv output.') # currently not working
     visualize_parser.add_argument('-tdt', '--topic_dynamics_timeline', action='store_true',
-                                  help='Create a dynamics timeline for all topics.')
+                                  help='Create a dynamics timeline for all topics.') # tdt is not working
     visualize_parser.add_argument('-tfh', '--topic_frequency_hist', action='store_true',
-                                  help='Create a topic frequency histogram.')
+                                  help='Create a topic frequency histogram from the csv output.')
 
     return parser.parse_args()
 def run_analysis() -> pd.DataFrame:
@@ -117,15 +117,21 @@ def display_graph(data: pd.DataFrame, args, topic_list=None):
         print("Creating general timeline...")
         plt_obj = displayer.create_general_timeline(data)
         output_path = os.path.join(output_dir, "general_timeline.png")
-        plt_obj.savefig(output_path)
-        print(f"General timeline saved at {output_path}")
+        if plt_obj:
+            plt_obj.savefig(output_path)
+            print(f"General timeline saved at {output_path}")
+        else:
+            print("Failed to create general timeline.")
 
     if args.general_histogram:
         print("Creating general histogram...")
         plt_obj = displayer.create_general_hist(data)
         output_path = os.path.join(output_dir, "general_histogram.png")
-        plt_obj.savefig(output_path)
-        print(f"General histogram saved at {output_path}")
+        if plt_obj:
+            plt_obj.savefig(output_path)
+            print(f"General histogram saved at {output_path}")
+        else:
+            print("Failed to create general histogram.")
 
     if args.topic_timeline:
         print("Creating topic timeline...")
@@ -133,8 +139,34 @@ def display_graph(data: pd.DataFrame, args, topic_list=None):
             topic_list = list(data['Label'].unique())
         plt_obj = displayer.create_topic_dynamics_timeline(topic_list, data)
         output_path = os.path.join(output_dir, "topic_timeline.png")
-        plt_obj.savefig(output_path)
-        print(f"Topic timeline saved at {output_path}")
+        if plt_obj:
+            plt_obj.savefig(output_path)
+            print(f"Topic timeline saved at {output_path}")
+        else:
+            print("Failed to create topic timeline.")
+
+    if args.topic_histogram:
+        print("Creating topic histogram...")
+        topic_to_plot = args.topic_histogram  # Argument to specify the topic to plot
+        plt_obj = displayer.create_hist_by_topic(topic_to_plot, data)
+        output_path = os.path.join(output_dir, f"{topic_to_plot}_histogram.png")
+        if plt_obj:
+            plt_obj.savefig(output_path)
+            print(f"Topic histogram for {topic_to_plot} saved at {output_path}")
+        else:
+            print(f"Failed to create topic histogram for {topic_to_plot}.")
+
+    if args.topic_dynamics_timeline:
+        print("Creating topic dynamics timeline...")
+        if topic_list is None:
+            topic_list = list(data['Label'].unique())
+        plt_obj = displayer.create_topic_dynamics_timeline(topic_list, data)
+        output_path = os.path.join(output_dir, "topic_dynamics_timeline.png")
+        if plt_obj:
+            plt_obj.savefig(output_path)
+            print(f"Topic dynamics timeline saved at {output_path}")
+        else:
+            print("Failed to create topic dynamics timeline.")
 
     if args.topic_frequency_hist:
         print("Creating topic frequency histogram...")
@@ -142,8 +174,11 @@ def display_graph(data: pd.DataFrame, args, topic_list=None):
             topic_list = list(data['Label'].unique())
         plt_obj = displayer.create_topic_frequency_hist(topic_list, data)
         output_path = os.path.join(output_dir, "topic_frequency_histogram.png")
-        plt_obj.savefig(output_path)
-        print(f"Topic frequency histogram saved at {output_path}")
+        if plt_obj:
+            plt_obj.savefig(output_path)
+            print(f"Topic frequency histogram saved at {output_path}")
+        else:
+            print("Failed to create topic frequency histogram.")
 
 
 def main():
