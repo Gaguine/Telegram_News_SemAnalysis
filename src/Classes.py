@@ -343,7 +343,6 @@ class Displayer:
             print(f"KeyError: {k}. Ensure the column names are correct.")
         except Exception as e:
             print(f"An error occurred: {e}")
-    # to-add to main.py
     def create_topic_frequency_hist(self,topic_list: list, data: pd.DataFrame) -> plt:
         """
         Creates a histogram showing the frequency of topics (labels) in the provided data.

@@ -15,6 +15,7 @@ def show_sick_banner():
 :                                                      :
 ························································"""
     print(banner)
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Text Analysis CLI using LLMs.")
@@ -24,7 +25,6 @@ def parse_args():
     default_data_dir = os.path.join(project_root, "Data")
     default_output_dir = os.path.join(project_root, "Output")
 
-    # Check if the `Data` directory exists
     if not os.path.exists(default_data_dir):
         raise FileNotFoundError(f"Default data directory not found: {default_data_dir}")
 
@@ -33,65 +33,27 @@ def parse_args():
         os.path.join(default_data_dir, f) for f in os.listdir(default_data_dir) if f.endswith(".html")
     ]
 
-    # Positional command (run)
-    parser.add_argument(
-        'run', help='Starts the analysis')
+    parser.add_argument('run', help='Starts the analysis')
+    parser.add_argument('visualize', help='Visualize the csv output.')
 
-    # Positional command (visualize)
-    parser.add_argument(
-        'visualize', help='Visualise the csv output.' # Add error handling no csv file found in the output directory.
-    )
-    parser.add_argument(
-        "-gt","--general_timeline", help="Create a general timeline from the csv output."
-    )
-    parser.add_argument(
-        "-tt", "--topic_timeline",
-        help="Create topic timeline from the csv output. Provide topic from the csv output.",
-        default=None
-    )
-    parser.add_argument(
-        "-gh","--general_histogram",help="Create a general histogram from the csv output."
-    )
-    parser.add_argument(
-        "-th","--topic_histogram", help="Create topic histogram from the csv output. Provide topic from the csv output."
-    )
-    parser.add_argument(
-        "-tdt", "--topic_dynamics_timeline",
-        help="Create a dynamics timeline for all topics."
-    )
-    parser.add_argument(
-        "-tfh", "--topic_frequency_hist",
-        help="Create a topic frequency histogram."
-    )
+    # Graph options
+    parser.add_argument("-gt", "--general_timeline", help="Create a general timeline from the csv output.")
+    parser.add_argument("-tt", "--topic_timeline", help="Create topic timeline from the csv output.", default=None)
+    parser.add_argument("-gh", "--general_histogram", help="Create a general histogram from the csv output.")
+    parser.add_argument("-th", "--topic_histogram", help="Create a topic histogram from the csv output.")
+    parser.add_argument("-tdt", "--topic_dynamics_timeline", help="Create a dynamics timeline for all topics.")
+    parser.add_argument("-tfh", "--topic_frequency_hist", help="Create a topic frequency histogram.")
 
+    parser.add_argument('--html', nargs='+', default=default_html_files,
+                        help='Path(s) to input HTML file(s). Defaults to files in the "Data" folder.')
+    parser.add_argument('--output', default=os.path.join(default_output_dir, "output.csv"),
+                        help='Path to the output CSV file. Defaults to "Output/output.csv".')
+    parser.add_argument('--sep', default='|', help='CSV delimiter (default: "|").')
+    parser.add_argument('-re', '--restriction', type=int, default=-1,
+                        help="Maximum number of messages to process. Default is -1.")
+    parser.add_argument('-ft', '--filter-topic',
+                        help="Filter results by topic. Possible topics: Politics, Economy, Technology, etc.")
 
-
-    parser.add_argument(
-        '--html',
-        nargs='+',
-        default=default_html_files,
-        help='Path(s) to input HTML file(s). Defaults to files in the "Data" folder.'
-    )
-    parser.add_argument(
-        '--output',
-        default=os.path.join(default_output_dir, "output.csv"),
-        help='Path to the output CSV file. Defaults to "Output/output.csv".'
-    )
-    parser.add_argument(
-        '--sep',
-        default='|',
-        help='CSV delimiter (default: "|").'
-    )
-    parser.add_argument(
-        '-re',
-        '--restriction',
-        type=int,
-        default=-1,
-        help="Maximum number of messages to process. Default is -1."
-    )
-    parser.add_argument('-ft','--filter-topic',
-                        help="Filter results by topic. Possible topics:"
-                             "Politics, Economy, Technology, Sports, Health, Entertainment, Science, Environment,World News, Local News")
     return parser.parse_args()
 
 def run_analysis(html_files, restriction) -> pd.DataFrame:
@@ -146,65 +108,53 @@ def display_output(data:pd.DataFrame,output_file, sep):
     # Create a DataFrame and save it to a CSV file
     displayer = Displayer(data)
     displayer.create_csv(output_file,sep)
-def display_graph(data: pd.DataFrame, args,topic_list=None):
+def display_graph(data: pd.DataFrame, args, topic_list=None):
     """Handles graph creation and visualization logic."""
     displayer = Displayer(data)
 
     if args.general_timeline:
-        print("Creating general timeline...")
         plt_obj = displayer.create_general_timeline(data)
-        output_path = os.path.join(args.general_timeline)
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        plt_obj.savefig(output_path)
-        print(f"General timeline saved at {output_path}")
+        if plt_obj:
+            output_path = os.path.join(args.general_timeline)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            plt_obj.savefig(output_path)
+            print(f"General timeline saved at {output_path}")
+
     if args.general_histogram:
-        print("Creating general histogram...")
         plt_obj = displayer.create_general_hist(data)
-        output_path = os.path.join(args.general_histogram)
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        plt_obj.savefig(output_path)
-        print(f"General histogram saved at {output_path}")
+        if plt_obj:
+            output_path = os.path.join(args.general_histogram)
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            plt_obj.savefig(output_path)
+            print(f"General histogram saved at {output_path}")
 
     if args.topic_timeline:
-        print(f"Creating topic timeline for topic: {args.topic_timeline}")
         plt_obj = displayer.create_timeline_by_topic(args.topic_timeline, data)
-        if plt_obj:  # Ensure a valid plot was created
+        if plt_obj:
             output_path = os.path.join(args.topic_timeline)
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             plt_obj.savefig(output_path)
             print(f"Topic timeline saved at {output_path}")
-        else:
-            print(f"Failed to create topic timeline for topic: {args.topic_timeline}")
-    if args.topic_histogram:
-        print(f"Creating topic histogram for topic: {args.topic_histogram}")
-        plt_obj = displayer.create_hist_by_topic(args.topic_histogram, data)
-        if plt_obj:  # Ensure a valid plot was created
-            output_path = os.path.join(args.topic_histogram)
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            plt_obj.savefig(output_path)
-            print(f"Topic histogram saved at {output_path}")
-        else:
-            print(f"Failed to create topic histogram for topic: {args.topic_histogram}")
 
     if args.topic_dynamics_timeline:
-        plt_obj = displayer.create_topic_dynamics_timeline(topic_list,data)
-        if plt_obj:  # Ensure a valid plot was created
+        if topic_list is None:
+            topic_list = list(data['Label'].unique())
+        plt_obj = displayer.create_topic_dynamics_timeline(topic_list, data)
+        if plt_obj:
             output_path = os.path.join(args.topic_dynamics_timeline)
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             plt_obj.savefig(output_path)
             print(f"Topic dynamics timeline saved at {output_path}")
-        else:
-            print(f"Failed to create topic timeline for topic: {args.topic_dynamics_timeline}")
+
     if args.topic_frequency_hist:
-        print(f"Creating topic frequency histogram: {args.topic_frequency_histogram}")
-        plt_obj = displayer.create_topic_frequency_hist(topic_list,data)
+        if topic_list is None:
+            topic_list = list(data['Label'].unique())
+        plt_obj = displayer.create_topic_frequency_hist(topic_list, data)
         if plt_obj:
-            output_path = os.path.join(args.topic_frequency_histogram)
+            output_path = os.path.join(args.topic_frequency_hist)
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             plt_obj.savefig(output_path)
-            print(f"Topic histogram saved at {output_path}")
-        else:
-            print(f"Creating topic frequency histogram: {args.topic_frequency_hist}")
+            print(f"Topic frequency histogram saved at {output_path}")
 
 
 def main():
