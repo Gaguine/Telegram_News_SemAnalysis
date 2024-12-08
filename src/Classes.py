@@ -239,7 +239,6 @@ class Displayer:
     # Generate csv file
     def create_csv(self,output_file:str,sep):
         self.data.to_csv(output_file, sep=sep, index=False)
-        print(f"Analysis completed. Results saved to {output_file}")
 
     def extract_labels_from_output_csv(self, output_dir: str, file_name: str = "output.csv") -> list:
         """
