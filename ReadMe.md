@@ -64,7 +64,7 @@ You have successfully installed the **Telegram_News_SemAnalysis** package! 🎉
 
 # Run Your First Analysis!
 ## Collect the Input Data
-Use Telegram's *export chat history* feature to collect the data you wish to analyse.![[Export_Chat_history.png]]
+Use Telegram's *export chat history* feature to collect the data you wish to analyse.![exch](Export_Chat_history.png)
 - Untick the **Photos** parameter to speed up the export process. 
 - Then click the **Export** button.
 
