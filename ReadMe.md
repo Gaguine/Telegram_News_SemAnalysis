@@ -5,21 +5,21 @@ First, create a virtual environment using Miniconda:
 ```bash
 conda create --name SemAn
 ```
-![Create Virtual environment using miniconda](Images/Create Virtual environment using miniconda.jpeg)
+![Create Virtual environment using miniconda](Images/Create_Virtual_environment_using_miniconda.jpeg)
 When prompted, type `y` to confirm the creation of the environment.
 ## 2. Activate the Virtual Environment
 Activate the virtual environment using the following command:
 ```bash
 conda activate SemAn
 ```
-![[activate env]](Images/activate virtual enc.png)
+![[activate env]](Images/activate_virtual_enc.png)
 After activation, the environment's name will appear in brackets on the terminal prompt.
 ## 3. Install Python Interpreter
 Telegram_News_SemAnalysis works with **python 3.10**. Install the correct version using the following command:
 ```bash
 conda install python=3.10
 ```
-![install interpreter](Images/Install python 310.png)
+![install interpreter](Images/Install_python_310.png)
 ## 4. Navigate to the Desired Directory
 Choose a directory to store the repository. Navigate to your desired location using:
 ```bash
@@ -31,7 +31,7 @@ cd ..
 ```
 
 Example for Windows users:
-![use cd](Images/use cd on windows.png)
+![use cd](Images/use_cd_on_windows.png)
 
 Once satisfied with your current directory, proceed to the next step of the installation guide.
 ## 5. Clone the Github Repository
@@ -41,11 +41,11 @@ git clone https://github.com/Gaguine/Telegram_News_SemAnalysis.git
 ```
 You should now see the `Telegram_News_SemAnalysis` folder in your chosen directory.
 
-![after cloning](Images/After cloning.png)
-![how to clone repo](Images/How to clone repo.png)
+![after cloning](Images/After_cloning.png)
+![how to clone repo](Images/How_to_clone_repo.png)
 To ensure the repository URL is up-to-date, follow these steps to get the latest cloning link:
 
-![get clone link](Images/how to link for cloning.png)
+![get clone link](Images/how_to_link_for_cloning.png)
 
 ## 6. Install Telegram_News_SemAnalysis Using `pip`
 Navigate into the cloned repository:
@@ -68,7 +68,7 @@ Use Telegram's *export chat history* feature to collect the data you wish to ana
 - Untick the **Photos** parameter to speed up the export process. 
 - Then click the **Export** button.
 
-![untick export](Images/photo untick.png)
+![untick export](Images/photo_untick.png)
 ## Locate the Data folder in the Repository Directory
 Within the repository directory, locate the **Data** folder. Ignore the `.txt` file and place the `.html` files you wish to analyze into this folder.
 
@@ -78,7 +78,7 @@ Return to the console and run the following command to start the analysis:
 ```bash
 SemAn run -re 55
 ```
-![running your first analysis](Images/running your first analysis.png)
+![running your first analysis](Images/running_your_first_analysis.png)
 - **--restriction** or **-re**: Limits the number of messages to analyze.
     - Example: `-re 55` analyzes the first 55 messages.
     - Default: If not specified, the program analyzes all input data.
@@ -88,7 +88,7 @@ SemAn run -re 55
 ## View the Output
 The analysis results will be stored in the **Output** folder within the cloned repository directory.
 
-![results after analysis](Images/result after analysis.png)
+![results after analysis](Images/result_after_analysis.png)
 # Visualisation
 Telegram_News_SemAnalysis can also visualize the analysis results for insight generation!
 Here are some examples:
