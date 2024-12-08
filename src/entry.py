@@ -25,7 +25,7 @@ def parse_args():
     subparsers = parser.add_subparsers(dest='command', help="Command to execute (run or visualize)")
 
     # 'run' subcommand
-    subparsers.add_parser('run', help='Run the analysis on all HTML files in the Data folder.')
+    run_parser = subparsers.add_parser('run', help='Run the analysis on all HTML files in the Data folder.')
 
     # 'visualize' subcommand
     visualize_parser = subparsers.add_parser('visualize', help='Visualize the analysis output.')
