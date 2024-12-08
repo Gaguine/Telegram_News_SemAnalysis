@@ -26,6 +26,8 @@ def parse_args():
 
     # 'run' subcommand
     run_parser = subparsers.add_parser('run', help='Run the analysis on all HTML files in the Data folder.')
+    run_parser.add_argument("-re", "--restriction", type=int, default=-1,
+                            help="Number of messages to analyze. Use -1 for all messages.")
 
     # 'visualize' subcommand
     visualize_parser = subparsers.add_parser('visualize', help='Visualize the analysis output.')
@@ -43,7 +45,7 @@ def parse_args():
                                   help='Create a topic frequency histogram from the csv output.')
 
     return parser.parse_args()
-def run_analysis() -> pd.DataFrame:
+def run_analysis(restriction:int) -> pd.DataFrame:
     """Run the main analysis logic."""
     project_root = os.getcwd()
     data_dir = os.path.join(project_root, "Data")
@@ -75,7 +77,7 @@ def run_analysis() -> pd.DataFrame:
         print(f"Processing file: {html_file}")
         fetcher.html_path = html_file
         bs_messages = fetcher.read_html()
-        message_list = fetcher.create_messages(bs_messages)
+        message_list = fetcher.create_messages(bs_messages, restriction)
 
     print(f"Collected {len(message_list)} messages. Commencing LLM analysis")
 
@@ -188,7 +190,7 @@ def main():
 
     if args.command == 'run':  # Automatically process all HTML files in the Data folder
         print("Starting analysis...")
-        data = run_analysis()
+        data = run_analysis(restriction=args.restriction)
 
         if data.empty:
             print("No data to process. Exiting.")
