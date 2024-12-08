@@ -52,7 +52,7 @@ Navigate into the cloned repository:
 ```bash
 cd Telegram_News_SemAnalysis
 ```
-![move into folder](Images/Move into the folder and install the package.png)
+![move into folder](Images/Move_into_the folder_and_install_the_package.png)
 Then install the package using:
 ```bash
 pip install .
@@ -64,7 +64,7 @@ You have successfully installed the **Telegram_News_SemAnalysis** package! 🎉
 
 # Run Your First Analysis!
 ## Collect the Input Data
-Use Telegram's *export chat history* feature to collect the data you wish to analyse.![[Export Chat history.png]]
+Use Telegram's *export chat history* feature to collect the data you wish to analyse.![[Export_Chat_history.png]]
 - Untick the **Photos** parameter to speed up the export process. 
 - Then click the **Export** button.
 
@@ -72,7 +72,7 @@ Use Telegram's *export chat history* feature to collect the data you wish to ana
 ## Locate the Data folder in the Repository Directory
 Within the repository directory, locate the **Data** folder. Ignore the `.txt` file and place the `.html` files you wish to analyze into this folder.
 
-![prj strucutre](Images/prjct structure, where to put input data.png)
+![prj strucutre](Images/prjct structure_where_to_put_input_data.png)
 ## Start the Analysis
 Return to the console and run the following command to start the analysis:
 ```bash
