@@ -10,7 +10,7 @@ setup(
     author="Butera Gaetano Antonio",
     description="The programs provides an analysis tool for telegram news chanel. It takes html files of said channels "
                 "and returns a csv file with information about the messages.",
-    version='0.1',
+    version='1.0',
     package_dir={"": "src"},
     install_requires=requirements,
     dependency_links=[

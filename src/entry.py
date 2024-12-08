@@ -1,9 +1,8 @@
 import argparse
 import os
-
-
 import pandas as pd
 from Classes import Fetcher, Analyser, Displayer, Filter
+
 
 def show_sick_banner():
     banner = """
@@ -16,7 +15,7 @@ def show_sick_banner():
 ························································"""
     print(banner)
 
-
+# Create commands for the CLI
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Text Analysis CLI using LLMs.")
@@ -45,41 +44,49 @@ def parse_args():
                                   help='Create a topic frequency histogram from the csv output.')
 
     return parser.parse_args()
-def run_analysis(restriction:int) -> pd.DataFrame:
-    """Run the main analysis logic."""
-    project_root = os.getcwd()
-    data_dir = os.path.join(project_root, "Data")
 
-    if not os.path.exists(data_dir):
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
+# Assign actions and logic to the CLI commands
+def run_analysis(restriction: int) -> pd.DataFrame:
+    """
+    Executes the main analysis logic, including fetching messages,
+    performing sentiment analysis, and classifying topics.
 
-    # Automatically list all `.html` files in the `Data` directory
-    html_files = [
-        os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith(".html")
-    ]
+    This function integrates various components (Fetcher, Analyser) to process
+    messages from HTML files, analyze their sentiment, and classify them into topics.
 
-    if not html_files:
-        print("No HTML files found in the Data directory. Exiting analysis.")
-        return pd.DataFrame()
+    Args:
+        restriction (int): The maximum number of messages to process. Use -1 for no restriction.
 
-    print(f"Found {len(html_files)} HTML files in the Data directory.")
-
-    fetcher = Fetcher(project_root)
+    Returns:
+        pd.DataFrame: A DataFrame containing the processed data with columns:
+                      - Date
+                      - Semantic Tag
+                      - Label(Topic)
+                      - Sensitive Topic(currently not implemented)
+    """
+    fetcher = Fetcher(os.getcwd())
     analyser = Analyser()
 
+    # Fetch and process messages directly using Fetcher
+    bs_messages = fetcher.read_html()
+    if not bs_messages:
+        print("No messages found in the HTML files. Exiting analysis.")
+        return pd.DataFrame()
+
+    message_list = fetcher.create_messages(bs_messages, restriction)
+
+    if not message_list:
+        print("No valid messages found. Exiting analysis.")
+        return pd.DataFrame()
+
+    print(f"Collected {len(message_list)} messages. Commencing LLM analysis.")
+
+    # Prepare data storage
     data = {
         "Date": [],
         "Semantic Tag": [],
         "Label": [],
     }
-
-    for html_file in html_files:
-        print(f"Processing file: {html_file}")
-        fetcher.html_path = html_file
-        bs_messages = fetcher.read_html()
-        message_list = fetcher.create_messages(bs_messages, restriction)
-
-    print(f"Collected {len(message_list)} messages. Commencing LLM analysis")
 
     # Perform sentiment analysis
     analyser.load_sentiment_model()
@@ -103,6 +110,14 @@ def run_analysis(restriction:int) -> pd.DataFrame:
     print("Analysis completed.")
     return pd.DataFrame(data)
 def display_output(data:pd.DataFrame,output_file, sep):
+    """
+    Create the output.csv file
+
+    Args:
+    data (pd.DataFrame): The processed data to be saved.
+    output_file (str): Path to the output CSV file.
+    sep (str): Delimiter to use in the CSV file.
+    """
     output_dir = os.path.dirname(output_file)
     os.makedirs(output_dir, exist_ok=True)  # Create the directory if it doesn't exist
 
@@ -110,7 +125,21 @@ def display_output(data:pd.DataFrame,output_file, sep):
     displayer = Displayer(data)
     displayer.create_csv(output_file,sep)
 def display_graph(data: pd.DataFrame, args, topic_list=None):
-    """Handles graph creation and visualization logic."""
+    """
+    Handles graph creation and visualization logic.
+     Args:
+        data (pd.DataFrame): The processed data used for visualization.
+        args: Parsed arguments specifying which graphs to create.
+        topic_list (list, optional): List of topics for topic-specific visualizations.
+                                     Defaults to None.
+
+    The function creates and saves:
+        - General timeline
+        - General histogram
+        - Topic dynamics timeline
+        - Topic frequency histogram
+        - Topic-specific timelines and histograms
+    """
     displayer = Displayer(data)
     output_dir = os.path.join(os.getcwd(), "Output")  # Ensure files are saved in the "Output" folder
     os.makedirs(output_dir, exist_ok=True)
@@ -124,7 +153,6 @@ def display_graph(data: pd.DataFrame, args, topic_list=None):
             print(f"General timeline saved at {output_path}")
         else:
             print("Failed to create general timeline.")
-
     if args.general_histogram:
         print("Creating general histogram...")
         plt_obj = displayer.create_general_hist(data)
@@ -134,7 +162,6 @@ def display_graph(data: pd.DataFrame, args, topic_list=None):
             print(f"General histogram saved at {output_path}")
         else:
             print("Failed to create general histogram.")
-
     if args.topic_dynamics_timeline:
         print("Creating topic timeline...")
         if topic_list is None:
@@ -146,7 +173,6 @@ def display_graph(data: pd.DataFrame, args, topic_list=None):
             print(f"Topic timeline saved at {output_path}")
         else:
             print("Failed to create topic timeline.")
-
     if args.topic_frequency_hist:
         print("Creating topic frequency histogram...")
         if topic_list is None:
@@ -167,7 +193,6 @@ def display_graph(data: pd.DataFrame, args, topic_list=None):
             print(f"Topic timeline for {args.topic_timeline} saved at {output_path}")
         else:
             print(f"Failed to create topic timeline for {args.topic_timeline}.")
-
     if args.topic_histogram:
         print(f"Creating topic histogram for topic: {args.topic_histogram}")
         plt_obj = displayer.create_hist_by_topic(args.topic_histogram, data)
